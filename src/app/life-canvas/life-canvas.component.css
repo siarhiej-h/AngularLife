@@ -1,0 +1,8 @@
+canvas {
+    border: 2px solid black;
+    background-color: white;
+}
+
+#lifeCanvas {
+    cursor: pointer;
+}

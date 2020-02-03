@@ -1,0 +1,68 @@
+:host, .lifeForm {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.lifeForm {
+    max-height: calc(var(--controlPanelHeight) + 4px);
+    min-width: max-content;
+}
+
+:host {
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    height: var(--controlPanelHeight);
+    line-height: var(--controlPanelHeight);
+    min-width: 600px;
+    min-height: var(--controlPanelHeight);
+}
+
+.lifeText {
+    margin: 0px;
+    font-weight: normal;
+    line-height: inherit;
+}
+
+.lifeControlButton {
+    color: black;
+    margin: 0px 5px;
+    line-height: inherit;
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    outline: none;
+    font-weight: bold;
+    border-radius: 20px;
+    border: 2px solid var(--niceDarkGreyColor);
+    cursor: pointer;
+    background-color: var(--niceLightGreyColor);
+}
+
+.lifeControlButton:hover {
+    background-color: var(--niceDarkGreyColor);
+    color: white;
+}
+
+select.lifeStartDropDown {
+    border: 2px solid var(--niceDarkGreyColor);
+    margin: 2px 5px;
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    background-color: var(--niceLightGreyColor);
+    height: var(--controlPanelHeight);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+select.lifeStartDropDown option:hover {
+    box-shadow: 0 0 10px 100px #1882A8 inset;
+}
+select.lifeStartDropDown::-ms-expand {
+    display: none;
+}

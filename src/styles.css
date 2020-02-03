@@ -1,0 +1,8 @@
+/* You can add global styles to this file, and also import other style files */
+
+:root {
+    --niceDarkGreyColor: #555555;
+    --niceGreyColor: #999999;
+    --niceLightGreyColor: #EEEEEE;
+    --controlPanelHeight: 30px;
+}

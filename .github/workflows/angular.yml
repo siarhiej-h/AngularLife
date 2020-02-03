@@ -1,0 +1,26 @@
+name: Angular workflow
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+        
+      - name: Install
+        run: |
+          npm install -g angular-cli-ghpages
+          ng build --prod --base-href "AngularLife"
+
+      - name: Deploy to Github Pages
+        uses: JamesIves/github-pages-deploy-action@3.1.5
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build
+          CLEAN: true

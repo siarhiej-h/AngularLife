@@ -1,0 +1,28 @@
+<div *ngIf="!lifeStarted && generationsPassed === 0; then showDropdown else showGenerations"></div>
+<ng-template #showDropdown>
+    <select class="lifeStartDropDown" name="role" [value]="selectedOption" (change)="onStartModeChange($event)">
+        <option *ngFor="let option of startOptionKeys" [ngValue]="option">{{startOptions[option]}}</option>
+    </select>
+</ng-template>
+<ng-template #showGenerations>
+    <h2 class="lifeText">Generations passed {{generationsPassed}}</h2>
+</ng-template>
+
+<form class="lifeForm" (ngSubmit)="onStartStop()" (reset)="onReset()">
+    <ng-container *ngIf="lifeStarted; then started else notStarted"></ng-container>
+    <ng-template #started>
+        <button class="lifeControlButton lifeStarted" type="submit">Stop life simulation</button>
+    </ng-template>
+    <ng-template #notStarted>
+        <ng-container *ngIf="generationsPassed === 0; then zeroGenerations else nonZeroGenerations"></ng-container>
+        <ng-template #zeroGenerations>
+            <button class="lifeControlButton" type="submit">Start life simulation</button>
+        </ng-template>
+        <ng-template #nonZeroGenerations>
+            <button class="lifeControlButton" type="submit">Resume life simulation</button>
+            <button class="lifeControlButton" type="reset">Reset life simulation</button>
+        </ng-template>
+    </ng-template>
+</form>
+
+<app-glider-mode-switch></app-glider-mode-switch>

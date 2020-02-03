@@ -1,0 +1,98 @@
+:host, .gliderModeLabel, .gliderModeInner, .gliderDirection, .gliderDirectionBox {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.gliderModeLabel {
+    overflow: hidden;
+    max-height: calc(var(--controlPanelHeight) + 4px);
+    min-width: max-content;
+    margin: 0px 2px;
+    font-weight: bold;
+    border-radius: 20px;
+    border: 2px solid var(--niceDarkGreyColor);
+}
+
+.gliderModeLabel, .gliderDirectionLabel {
+    cursor: pointer;
+}
+
+.gliderModeInner:before, .gliderDirectionBox {
+    background-color: var(--niceLightGreyColor);
+}
+
+.gliderModeInner:after {
+    background-color: var(--niceDarkGreyColor);
+    color: white;
+}
+
+.gliderMode {
+    position: relative;
+}
+
+.gliderMode input#gliderModeCheckbox {
+    display: none;
+}
+
+.gliderModeInner {
+    width: 130px;
+    min-width: 200%;
+    margin-left: -100%;
+    margin-right: 2px;
+    transition: margin 0.3s ease-in 0s;
+    text-align: center;
+}
+
+.gliderModeInner:before, .gliderModeInner:after {
+    float: left;
+    width: 50%;
+}
+
+.gliderModeInner:before {
+    content: "Pointer mode";
+}
+
+.gliderModeInner:after {
+    content: "Glider mode";
+}
+
+#gliderModeCheckbox:checked + .gliderModeLabel .gliderModeInner {
+    margin-left: 2px;
+}
+
+.gliderDirection {
+    flex-wrap: wrap;
+    margin: 2px;
+    width: var(--controlPanelHeight);
+    height: var(--controlPanelHeight);
+    min-width: var(--controlPanelHeight);
+    min-height: var(--controlPanelHeight);
+}
+
+.gliderDirectionLabel {
+    width: 50%;
+    height: 50%;
+}
+
+.gliderDirectionLabel:hover input.gliderDirectionRadio ~ .gliderDirectionBox {
+    background-color: darkslategray;
+}
+
+.gliderDirectionLabel input.gliderDirectionRadio:checked ~ .gliderDirectionBox {
+    background-color: var(--niceDarkGreyColor);
+}
+
+.gliderDirectionRadio {
+    display: none;
+}
+
+.gliderDirectionBox {
+    height: 95%;
+    width: 95%;
+    border: solid;
+    border-width: 1px;
+    border-color: var(--niceDarkGreyColor);
+}

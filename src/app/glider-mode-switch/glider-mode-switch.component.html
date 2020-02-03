@@ -1,0 +1,51 @@
+<div class="gliderMode">
+    <input type="checkbox" id="gliderModeCheckbox" [value]="gliderMode" (change)="onModeChange($event)" [checked]="!gliderMode">
+    <label class="gliderModeLabel" for="gliderModeCheckbox">
+        <span class="gliderModeInner"></span>
+    </label>
+</div>
+
+<div>
+    <div *ngIf="gliderMode" class="gliderDirection">
+        <label class="gliderDirectionLabel">
+            <input type="radio"
+                    class="gliderDirectionRadio"
+                    name="gliderDirection"
+                    [value]="upLeft"
+                    (change)="onDirectionChange($event)"
+                    [checked]="upLeft === gliderDirection"
+                    >
+            <span class="gliderDirectionBox"></span>
+        </label>
+        <label class="gliderDirectionLabel">
+            <input type="radio"
+                    class="gliderDirectionRadio"
+                    name="gliderDirection"
+                    [value]="upRight"
+                    (change)="onDirectionChange($event)"
+                    [checked]="upRight === gliderDirection"
+                   >
+            <span class="gliderDirectionBox"></span>
+        </label>
+        <label class="gliderDirectionLabel">
+            <input type="radio"
+                    class="gliderDirectionRadio"
+                    name="gliderDirection"
+                    [value]="downLeft"
+                    (change)="onDirectionChange($event)"
+                    [checked]="downLeft === gliderDirection"
+                   >
+            <span class="gliderDirectionBox"></span>
+        </label>
+        <label class="gliderDirectionLabel">
+            <input type="radio"
+                    class="gliderDirectionRadio"
+                    name="gliderDirection"
+                    [value]="downRight"
+                    (change)="onDirectionChange($event)"
+                    [checked]="downRight === gliderDirection"
+                   >
+            <span class="gliderDirectionBox"></span>
+        </label>
+    </div>
+</div>
