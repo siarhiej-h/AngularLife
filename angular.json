@@ -21,7 +21,9 @@
             "aot": false,
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/404.html",
+              "src/.nojekyll",
             ],
             "styles": [
               "src/styles.css"

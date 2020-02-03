@@ -14,13 +14,13 @@ jobs:
         
       - name: Install
         run: |
-          npm install -g angular-cli-ghpages
-          ng build --prod --base-href "AngularLife"
+          npm install
+          npm run-script build-prod
 
       - name: Deploy to Github Pages
         uses: JamesIves/github-pages-deploy-action@3.1.5
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: build
+          FOLDER: dist/AngularLife
           CLEAN: true
