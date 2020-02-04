@@ -9,9 +9,9 @@ import { Subscription } from 'rxjs';
 })
 export class PixelSizeControlComponent implements OnInit, OnDestroy {  
 
-  private Enabled: boolean = true;
+  Enabled: boolean = true;
 
-  private PixelSize: number = 4;
+  PixelSize: number = 4;
 
   private subs: Subscription[] = [];  
   
@@ -30,7 +30,7 @@ export class PixelSizeControlComponent implements OnInit, OnDestroy {
   ngOnInit() {
   }
 
-  private onSliderValueChange(event) {
+  onSliderValueChange(event) {
     if (event.target) {
       this.PixelSize = event.target.value;
       this.lifeControlService.changePixelSize(this.PixelSize);

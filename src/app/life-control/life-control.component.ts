@@ -10,17 +10,17 @@ import { Subscription } from 'rxjs';
 })
 export class LifeControlComponent implements OnInit, OnDestroy {
 
-  private lifeStarted: boolean;
+  public lifeStarted: boolean;
 
-  private generationsPassed: number;
+  public generationsPassed: number;
 
-  private startOptions = startOptions;  
+  public startOptions = startOptions;  
 
-  private get startOptionKeys():string[] {
+  public get startOptionKeys():string[] {
     return Object.keys(startOptions);
   }
 
-  private selectedOption: startOptions;
+  public selectedOption: startOptions;
 
   private subs: Subscription[] = [];  
 

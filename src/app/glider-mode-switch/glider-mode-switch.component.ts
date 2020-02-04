@@ -9,25 +9,25 @@ import { LifeControlService } from '../life-control.service';
 })
 export class GliderModeSwitchComponent implements OnInit {
 
-  private gliderMode: boolean;
-  private gliderDirection: gliderDirection;
+  public gliderMode: boolean;
+  public gliderDirection: gliderDirection;
 
-  private readonly upLeft: gliderDirection = gliderDirection.UpLeft;
-  private readonly upRight: gliderDirection = gliderDirection.UpRight;
-  private readonly downLeft: gliderDirection = gliderDirection.DownLeft;
-  private readonly downRight: gliderDirection = gliderDirection.DownRight;
+  public readonly upLeft: gliderDirection = gliderDirection.UpLeft;
+  public readonly upRight: gliderDirection = gliderDirection.UpRight;
+  public readonly downLeft: gliderDirection = gliderDirection.DownLeft;
+  public readonly downRight: gliderDirection = gliderDirection.DownRight;
 
   constructor(private lifeControlService: LifeControlService) { 
     this.gliderDirection = lifeControlService.DefaultGliderDirection;
     this.gliderMode = lifeControlService.DefaultGliderMode;
   }
 
-  private onModeChange(event): void {
+  onModeChange(event): void {
     this.gliderMode = !this.gliderMode;
     this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
   }
 
-  private onDirectionChange(event): void {
+  onDirectionChange(event): void {
     this.gliderDirection = event.target.value;
     this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
   }

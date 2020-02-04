@@ -146,14 +146,14 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderGrid(this.grid);     
   }
 
-  public updatePixelSize(pixelSize: number): void {
+  updatePixelSize(pixelSize: number): void {
     this.CellPixelSize = pixelSize;
     this.Cols = 2 * Math.floor(this.containerWidth / this.CellPixelSize / 2);
     this.Rows = 2 * Math.floor(this.containerHeight / this.CellPixelSize / 2);
     this.ref.detectChanges();
   }
 
-  public renderGrid(grid: grid) {
+  renderGrid(grid: grid) {
     let alive: cellData[] = [];
     let dead: cellData[] = [];
     for (let i = 0; i !== grid.height; i++) {
@@ -192,11 +192,11 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     this.context.clearRect(0, 0, this.Cols * this.CellPixelSize, this.Rows * this.CellPixelSize);
   }
 
-  public get Width(): number {
+  get Width(): number {
     return this.Cols * this.CellPixelSize;
   }
 
-  public get Height(): number {
+  get Height(): number {
     return this.Rows * this.CellPixelSize;
   }
 }
