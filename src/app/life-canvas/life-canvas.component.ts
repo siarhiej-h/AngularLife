@@ -113,8 +113,9 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
     else {
-      let isAlive = this.grid.cells[y * this.grid.width + x].isAlive;
-      (isAlive ? dead : alive).push({x: x, y: y});
+      let isAlive = !this.grid.cells[y * this.grid.width + x].isAlive;
+      this.grid.set(x, y, isAlive);
+      (isAlive ? alive : dead).push({x: x, y: y});
     }
 
     this.paint(alive, dead);
