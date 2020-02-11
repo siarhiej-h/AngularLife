@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { gliderDirection } from '../game-model/gliderDirection';
 import { LifeControlService } from '../life-control.service';
 
@@ -7,7 +7,7 @@ import { LifeControlService } from '../life-control.service';
   templateUrl: './glider-mode-switch.component.html',
   styleUrls: ['./glider-mode-switch.component.css']
 })
-export class GliderModeSwitchComponent implements OnInit {
+export class GliderModeSwitchComponent {
 
   public gliderMode: boolean;
   public gliderDirection: gliderDirection;
@@ -22,17 +22,14 @@ export class GliderModeSwitchComponent implements OnInit {
     this.gliderMode = lifeControlService.DefaultGliderMode;
   }
 
-  onModeChange(event): void {
+  onModeChange(): void {
     this.gliderMode = !this.gliderMode;
     this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
   }
 
   onDirectionChange(event): void {
-    this.gliderDirection = event.target.value;
+    this.gliderDirection = +event.target.value;
     this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
-  }
-
-  ngOnInit() {
   }
 
 }
