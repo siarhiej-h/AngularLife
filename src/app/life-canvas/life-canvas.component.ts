@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef  } from '@angular/core';
+import { ActivatedRoute, Params  } from '@angular/router';
 import { grid } from "../game-model/grid";
 import { cellData } from "../game-model/cell";
 import { startOptions } from '../game-model/startOptions';
@@ -13,61 +14,65 @@ import { getGlider } from '../game-model/lifeFormHelper';
   styleUrls: ['./life-canvas.component.css']
 })
 export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {  
-  public Cols: number;
-  public Rows: number;
-  public CellPixelSize: number = 4;
-  public CellBorderSize: number = 1;
 
+  private cols: number;
+  private rows: number;
+  private cellPixelSize: number = 4;
+  private cellBorderSize: number = 1;
   private context: CanvasRenderingContext2D;
-
   private subs: Subscription[] = [];
-
   private grid: grid;
-
   private interval;
-
-  private StartOptions: startOptions;
-
+  private startOptions: startOptions;
   private containerWidth: number;
   private containerHeight: number;
-
   private isGliderMode: boolean;
   private gliderDirection: gliderDirection;
-
-  private nextFrame: boolean = true;
+  private delay: number = 15;
 
   @ViewChild('canvas', {static: false}) canvas: ElementRef;
 
-  constructor(private lifeControlService: LifeControlService, private ref: ChangeDetectorRef) {
-
-    this.CellPixelSize = lifeControlService.DefaultPixelSize;
-    this.StartOptions = lifeControlService.DefaultStartOptions;
+  constructor(private lifeControlService: LifeControlService, private ref: ChangeDetectorRef, private route: ActivatedRoute) {
     
+    this.cellPixelSize = lifeControlService.DefaultPixelSize;
+    this.startOptions = lifeControlService.DefaultStartOptions;
+
     this.onPixelSizeChange = this.onPixelSizeChange.bind(this);
     this.onStartOptionsChange = this.onStartOptionsChange.bind(this);
     this.onLifeStateChanged = this.onLifeStateChanged.bind(this);
     this.onReset = this.onReset.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this);
     this.onGliderModeChange = this.onGliderModeChange.bind(this);
+    this.onParamsChange = this.onParamsChange.bind(this);
 
     this.subs.push(this.lifeControlService.StartOptions$.subscribe(this.onStartOptionsChange));
     this.subs.push(this.lifeControlService.CellPixelSize$.subscribe(this.onPixelSizeChange));
     this.subs.push(this.lifeControlService.LifeState$.subscribe(this.onLifeStateChanged));
     this.subs.push(this.lifeControlService.Reset$.subscribe(this.onReset));
     this.subs.push(this.lifeControlService.GliderMode$.subscribe(this.onGliderModeChange));
+    this.subs.push(route.queryParams.subscribe(this.onParamsChange));
+  }
+
+  onParamsChange(params: Params) {
+    let { delay } = params;
+    if (delay < 1){
+      return;
+    }
+
+    this.delay = delay;
+    if (this.interval){
+      clearInterval(this.interval);
+      this.onLifeStateChanged(true);
+    }
   }
 
   onLifeStateChanged(state: boolean): void {
-    if (state) {
+    if (state) {      
         this.interval = setInterval(() => {
-          if (this.nextFrame) {
-            
-            let [alive, dead] = this.grid.calcNextGen();
-            this.paint(alive, dead);
-            this.lifeControlService.upCount();
-            
-          }          
-      }, 15);
+          let [alive, dead] = this.grid.calcNextGen();
+          this.paint(alive, dead);
+          this.lifeControlService.upCount();
+      }, this.delay);
     }
     else {
       clearInterval(this.interval);
@@ -82,12 +87,12 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onStartOptionsChange(startOptions: startOptions): void {
     this.clear();
-    this.StartOptions = startOptions;
+    this.startOptions = startOptions;
     this.onReset();
   }
 
   onReset(): void {
-    this.grid = grid.create(this.Cols, this.Rows, this.StartOptions);
+    this.grid = grid.create(this.cols, this.rows, this.startOptions);
     this.renderGrid(this.grid);
   }
 
@@ -96,8 +101,8 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    let x = Math.floor(event.offsetX / this.CellPixelSize);
-    let y = Math.floor(event.offsetY / this.CellPixelSize);
+    let x = Math.floor(event.offsetX / this.cellPixelSize);
+    let y = Math.floor(event.offsetY / this.cellPixelSize);
 
     let alive = [];
     let dead = [];
@@ -129,8 +134,8 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.containerWidth = window.outerWidth * .97;
     this.containerHeight = window.outerHeight * .85;
-    this.Cols = 2 * Math.floor(this.containerWidth / this.CellPixelSize / 2);
-    this.Rows = 2 * Math.floor(this.containerHeight / this.CellPixelSize / 2);
+    this.cols = 2 * Math.floor(this.containerWidth / this.cellPixelSize / 2);
+    this.rows = 2 * Math.floor(this.containerHeight / this.cellPixelSize / 2);
   }
 
   ngOnDestroy() {
@@ -143,14 +148,14 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     const canvas = this.canvas.nativeElement;
     this.context = canvas.getContext('2d');
-    this.grid = grid.create(this.Cols, this.Rows, this.StartOptions);
+    this.grid = grid.create(this.cols, this.rows, this.startOptions);
     this.renderGrid(this.grid);     
   }
 
   updatePixelSize(pixelSize: number): void {
-    this.CellPixelSize = pixelSize;
-    this.Cols = 2 * Math.floor(this.containerWidth / this.CellPixelSize / 2);
-    this.Rows = 2 * Math.floor(this.containerHeight / this.CellPixelSize / 2);
+    this.cellPixelSize = pixelSize;
+    this.cols = 2 * Math.floor(this.containerWidth / this.cellPixelSize / 2);
+    this.rows = 2 * Math.floor(this.containerHeight / this.cellPixelSize / 2);
     this.ref.detectChanges();
   }
 
@@ -181,23 +186,23 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   paintCells(cells: cellData[]): void {
-    let size = this.CellPixelSize - this.CellBorderSize;
+    let size = this.cellPixelSize - this.cellBorderSize;
     for (const cell of cells) {
-      let x = cell.x * this.CellPixelSize + this.CellBorderSize;
-      let y = cell.y * this.CellPixelSize + this.CellBorderSize;
+      let x = cell.x * this.cellPixelSize + this.cellBorderSize;
+      let y = cell.y * this.cellPixelSize + this.cellBorderSize;
       this.context.fillRect(x, y, size, size);
     }
   }
 
   clear() {    
-    this.context.clearRect(0, 0, this.Cols * this.CellPixelSize, this.Rows * this.CellPixelSize);
+    this.context.clearRect(0, 0, this.cols * this.cellPixelSize, this.rows * this.cellPixelSize);
   }
 
   get Width(): number {
-    return this.Cols * this.CellPixelSize;
+    return this.cols * this.cellPixelSize;
   }
 
   get Height(): number {
-    return this.Rows * this.CellPixelSize;
+    return this.rows * this.cellPixelSize;
   }
 }
