@@ -37,7 +37,12 @@
                 "input": "public"
               },
               "src/favicon.ico",
-              "src/404.html"
+              "src/404.html",
+              {
+                "glob": ".nojekyll",
+                "input": "src",
+                "output": "/"
+              }
             ],
             "styles": [
               "src/styles.css"
