@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { LifeControlService } from './life-control.service';
 import { StartOptions } from './game-model/start-options';
 import { GliderDirection } from './game-model/glider-direction';
+import { PatternType } from './game-model/pattern-type';
 
 describe('LifeControlService', () => {
   let service: LifeControlService;
@@ -17,7 +18,7 @@ describe('LifeControlService', () => {
 
   it('should have default values', () => {
     expect(service.pixelSize()).toBe(4);
-    expect(service.startOptions()).toBe(StartOptions.Random);
+    expect(service.startOptions()).toBe(StartOptions.Random10);
     expect(service.isRunning()).toBeFalse();
     expect(service.generations()).toBe(0);
   });
@@ -54,10 +55,13 @@ describe('LifeControlService', () => {
     expect(service.generations()).toBe(0);
   });
 
-  it('should change glider mode', () => {
-    service.changeGliderMode(false, GliderDirection.DownLeft);
+  it('should change pattern mode', () => {
+    service.changePatternMode(PatternType.Glider, GliderDirection.DownLeft);
     
-    expect(service.gliderEnabled()).toBeFalse();
-    expect(service.gliderDirection()).toBe(GliderDirection.DownLeft);
+    expect(service.currentPatternType()).toBe(PatternType.Glider);
+    expect(service.currentDirection()).toBe(GliderDirection.DownLeft);
+    
+    service.changePatternMode(PatternType.Block);
+    expect(service.currentPatternType()).toBe(PatternType.Block);
   });
 });

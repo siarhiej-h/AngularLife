@@ -14,8 +14,9 @@ import {
 import { Grid } from '../game-model/grid';
 import { CellData } from '../game-model/cell';
 import { LifeControlService } from '../life-control.service';
+import { getPattern } from '../game-model/life-form-helper';
+import { PatternType } from '../game-model/pattern-type';
 import { GliderDirection } from '../game-model/glider-direction';
-import { getGlider } from '../game-model/life-form-helper';
 
 @Component({
   selector: 'app-life-canvas',
@@ -117,42 +118,30 @@ export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const alive: CellData[] = [];
     const dead: CellData[] = [];
-    const gliderMode = this.lifeControl.gliderMode();
+    const patternMode = this.lifeControl.patternMode();
 
-    if (gliderMode.enabled) {
-      this.placeGlider(x, y, gliderMode.direction, alive, dead);
-    } else {
-      this.toggleCell(x, y, alive, dead);
-    }
-
+    this.placePattern(x, y, patternMode.patternType, patternMode.direction, alive, dead);
     this.paint(alive, dead);
   }
 
-  private placeGlider(
+  private placePattern(
     x: number,
     y: number,
-    direction: GliderDirection,
+    patternType: PatternType,
+    direction: GliderDirection | undefined,
     alive: CellData[],
     dead: CellData[]
   ): void {
-    const cells = getGlider(direction, this.grid, x, y);
+    const cells = getPattern(patternType, this.grid, x, y, direction);
     for (const [cellX, cellY, isAlive] of cells) {
-      this.grid.set(cellX, cellY, isAlive);
-      (isAlive ? alive : dead).push({ x: cellX, y: cellY });
-    }
-  }
-
-  private toggleCell(
-    x: number,
-    y: number,
-    alive: CellData[],
-    dead: CellData[]
-  ): void {
-    const idx = y * this.grid.width + x;
-    if (idx >= 0 && idx < this.grid.cells.length) {
-      const isAlive = !this.grid.cells[idx].isAlive;
-      this.grid.set(x, y, isAlive);
-      (isAlive ? alive : dead).push({ x, y });
+      // For Cell pattern, toggle if already alive
+      if (patternType === PatternType.Cell && this.grid.cells[cellY * this.grid.width + cellX].isAlive) {
+        this.grid.set(cellX, cellY, false);
+        dead.push({ x: cellX, y: cellY });
+      } else {
+        this.grid.set(cellX, cellY, isAlive);
+        (isAlive ? alive : dead).push({ x: cellX, y: cellY });
+      }
     }
   }
 

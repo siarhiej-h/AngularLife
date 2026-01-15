@@ -2,7 +2,8 @@
   @if (showDropdown()) {
   <div class="control-group">
     <label class="control-label" for="startMode">Pattern</label>
-    <select id="startMode" class="control-select" [value]="selectedOption()" (change)="onStartModeChange($event)">
+    <select id="startMode" class="control-select" [ngModel]="selectedOption()"
+      (ngModelChange)="onStartModeChange($event)">
       @for (option of startOptionKeys; track option) {
       <option [value]="option">{{ option }}</option>
       }
@@ -41,5 +42,5 @@
     }
   </div>
 
-  <app-glider-mode-switch />
+  <app-pattern-selector />
 </div>

@@ -1,0 +1,38 @@
+<div class="pattern-selector">
+  <div class="pattern-dropdown-container">
+    <label class="pattern-label" for="patternSelect">Pattern:</label>
+    <select
+      id="patternSelect"
+      class="pattern-select"
+      [value]="currentPattern()"
+      (change)="onPatternChange($event)"
+    >
+      @for (group of patternGroups; track group.label) {
+        <optgroup [label]="group.label">
+          @for (pattern of group.patterns; track pattern.type) {
+            <option [value]="pattern.type">
+              {{ pattern.icon }} {{ pattern.label }}
+            </option>
+          }
+        </optgroup>
+      }
+    </select>
+  </div>
+
+  @if (showDirectionPicker()) {
+    <div class="direction-picker">
+      <span class="direction-label">Direction:</span>
+      @for (dir of directions; track dir.value) {
+        <button
+          type="button"
+          class="direction-btn"
+          [class.active]="currentDirection() === dir.value"
+          [title]="dir.title"
+          (click)="onDirectionChange(dir.value)"
+        >
+          {{ dir.label }}
+        </button>
+      }
+    </div>
+  }
+</div>

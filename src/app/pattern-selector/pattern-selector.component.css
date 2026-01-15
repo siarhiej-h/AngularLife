@@ -1,0 +1,95 @@
+.pattern-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pattern-dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pattern-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #a0a0b0;
+  white-space: nowrap;
+}
+
+.pattern-select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.pattern-select:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.pattern-select:focus {
+  outline: none;
+  border-color: rgba(233, 69, 96, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pattern-select optgroup {
+  font-weight: 600;
+  color: #a0a0b0;
+}
+
+.pattern-select option {
+  background: #1a1a2e;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+.direction-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.direction-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #a0a0b0;
+  margin-right: 0.25rem;
+}
+
+.direction-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 1rem;
+  color: #a0a0b0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.direction-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.direction-btn.active {
+  color: #e94560;
+  background: rgba(233, 69, 96, 0.2);
+}

@@ -22,11 +22,10 @@ export class Grid {
     static create(
         width: number,
         height: number,
-        options: StartOptions,
-        probability = 0.1
+        options: StartOptions
     ): Grid {
         const newGrid = new Grid(width, height);
-        newGrid.populate(options, probability);
+        newGrid.populate(options);
         return newGrid;
     }
 
@@ -83,10 +82,15 @@ export class Grid {
         return neighboursAlive === 3;
     }
 
-    private populate(options: StartOptions, probability = 0.5): void {
-        if (options === StartOptions.Random) {
-            this.populateRandomGrid(probability);
+    private populate(options: StartOptions): void {
+        if (options === StartOptions.Random10) {
+            this.populateRandomGrid(0.1);
+        } else if (options === StartOptions.Random25) {
+            this.populateRandomGrid(0.25);
+        } else if (options === StartOptions.Random50) {
+            this.populateRandomGrid(0.5);
         }
+        // Blank option doesn't populate anything (all cells remain dead)
     }
 
     private populateRandomGrid(probability: number): void {

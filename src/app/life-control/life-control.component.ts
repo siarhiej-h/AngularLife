@@ -2,12 +2,12 @@ import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { LifeControlService } from '../life-control.service';
 import { StartOptions } from '../game-model/start-options';
-import { GliderModeSwitchComponent } from '../glider-mode-switch/glider-mode-switch.component';
+import { PatternSelectorComponent } from '../pattern-selector/pattern-selector.component';
 
 @Component({
   selector: 'app-life-control',
   standalone: true,
-  imports: [FormsModule, GliderModeSwitchComponent],
+  imports: [FormsModule, PatternSelectorComponent],
   templateUrl: './life-control.component.html',
   styleUrl: './life-control.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -42,9 +42,8 @@ export class LifeControlComponent {
     this.lifeControl.reset();
   }
 
-  onStartModeChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const option = target.value as StartOptions;
+  onStartModeChange(value: string): void {
+    const option = value as StartOptions;
     this.lifeControl.changeStartOptions(option);
   }
 }
