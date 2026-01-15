@@ -1,27 +1,126 @@
-# AngularLife
+# Conway's Game of Life - Angular
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.24.
+An interactive implementation of [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) built with Angular 19.
 
-## Development server
+![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Features
 
-## Code scaffolding
+- **Interactive Canvas**: Click to add/remove individual cells or place gliders
+- **Glider Mode**: Place gliders moving in any of four directions
+- **Adjustable Cell Size**: Change the simulation resolution with the pixel size slider
+- **Start Patterns**: Begin with a random pattern or blank canvas
+- **Responsive Design**: Works on desktop and mobile devices
+- **Modern UI**: Dark theme with smooth animations and visual feedback
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Tech Stack
 
-## Build
+- **Angular 19** with standalone components
+- **Signals** for reactive state management
+- **OnPush** change detection for optimal performance
+- **requestAnimationFrame** for smooth simulation rendering
+- **Modern CSS** with custom properties and flexbox/grid layouts
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+## Getting Started
 
-## Running unit tests
+### Prerequisites
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+- Node.js 18.19.1 or higher
+- npm 10 or higher
 
-## Running end-to-end tests
+### Installation
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+```bash
+# Clone the repository
+git clone https://github.com/your-username/AngularLife.git
+cd AngularLife
 
-## Further help
+# Install dependencies
+npm install
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+# Start the development server
+npm start
+```
+
+Navigate to `http://localhost:4200/` in your browser.
+
+### Build for Production
+
+```bash
+npm run build-prod
+```
+
+The build artifacts will be stored in the `dist/AngularLife` directory.
+
+## How to Play
+
+1. **Select a starting pattern** from the dropdown (Random or Blank)
+2. **Click on the canvas** to add cells or gliders
+3. **Toggle Glider mode** to switch between placing single cells and gliders
+4. **Choose glider direction** using the direction picker (↖ ↗ ↙ ↘)
+5. **Adjust cell size** using the slider (available before starting)
+6. **Press Start** to begin the simulation
+7. **Press Stop** to pause and **Reset** to start over
+
+## Game Rules
+
+Conway's Game of Life follows these simple rules:
+
+1. Any live cell with fewer than 2 live neighbors dies (underpopulation)
+2. Any live cell with 2 or 3 live neighbors survives
+3. Any live cell with more than 3 live neighbors dies (overpopulation)
+4. Any dead cell with exactly 3 live neighbors becomes alive (reproduction)
+
+The grid wraps around at the edges (toroidal topology).
+
+## Project Structure
+
+```
+src/app/
+├── game-model/           # Core game logic
+│   ├── cell.ts           # Cell class and data types
+│   ├── grid.ts           # Grid management and generation calculation
+│   ├── glider-direction.ts
+│   ├── life-form-helper.ts
+│   └── start-options.ts
+├── life-canvas/          # Main canvas component
+├── life-control/         # Simulation controls
+├── glider-mode-switch/   # Glider mode toggle
+├── pixel-size-control/   # Cell size slider
+├── life-control.service.ts  # Central state management
+├── app.component.ts      # Root component
+├── app.config.ts         # Application configuration
+└── app.routes.ts         # Route definitions
+```
+
+## Performance Optimizations
+
+- **Double buffering** for grid state to avoid allocation during simulation
+- **Neighbor counting** optimization - only tracks changes, not full recalculation
+- **requestAnimationFrame** for smooth, efficient rendering
+- **OnPush change detection** on all components
+- **Differential painting** - only repaints cells that changed state
+
+## Development
+
+```bash
+# Run tests
+npm test
+
+# Run linter
+npm run lint
+
+# Run development server
+npm start
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) by John Horton Conway
+- Built with [Angular](https://angular.dev/)

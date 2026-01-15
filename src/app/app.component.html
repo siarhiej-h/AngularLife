@@ -1,3 +1,18 @@
-<app-life-control></app-life-control>
-<app-pixel-size-control></app-pixel-size-control>
-<app-life-canvas></app-life-canvas>
+<div class="app-container">
+  <header class="app-header">
+    <h1 class="app-title">Conway's Game of Life</h1>
+    <p class="app-subtitle">Click to add cells or gliders, then start the simulation</p>
+  </header>
+  
+  <main class="app-main">
+    <div class="controls-wrapper">
+      <app-life-control />
+      <app-pixel-size-control />
+    </div>
+    <app-life-canvas />
+  </main>
+  
+  <footer class="app-footer">
+    <span>Built with Angular 19</span>
+  </footer>
+</div>

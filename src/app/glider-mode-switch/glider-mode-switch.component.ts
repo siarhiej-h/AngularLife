@@ -1,35 +1,34 @@
-import { Component } from '@angular/core';
-import { gliderDirection } from '../game-model/gliderDirection';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { GliderDirection } from '../game-model/glider-direction';
 import { LifeControlService } from '../life-control.service';
 
 @Component({
   selector: 'app-glider-mode-switch',
+  standalone: true,
   templateUrl: './glider-mode-switch.component.html',
-  styleUrls: ['./glider-mode-switch.component.css']
+  styleUrl: './glider-mode-switch.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GliderModeSwitchComponent {
+  private readonly lifeControl = inject(LifeControlService);
 
-  public gliderMode: boolean;
-  public gliderDirection: gliderDirection;
+  readonly GliderDirection = GliderDirection;
+  readonly gliderEnabled = this.lifeControl.gliderEnabled;
+  readonly gliderDirection = this.lifeControl.gliderDirection;
 
-  public readonly upLeft: gliderDirection = gliderDirection.UpLeft;
-  public readonly upRight: gliderDirection = gliderDirection.UpRight;
-  public readonly downLeft: gliderDirection = gliderDirection.DownLeft;
-  public readonly downRight: gliderDirection = gliderDirection.DownRight;
+  readonly directions = [
+    { value: GliderDirection.UpLeft, label: '↖', title: 'Up-Left' },
+    { value: GliderDirection.UpRight, label: '↗', title: 'Up-Right' },
+    { value: GliderDirection.DownLeft, label: '↙', title: 'Down-Left' },
+    { value: GliderDirection.DownRight, label: '↘', title: 'Down-Right' }
+  ];
 
-  constructor(private lifeControlService: LifeControlService) { 
-    this.gliderDirection = lifeControlService.DefaultGliderDirection;
-    this.gliderMode = lifeControlService.DefaultGliderMode;
+  onModeToggle(): void {
+    const currentMode = this.lifeControl.gliderMode();
+    this.lifeControl.changeGliderMode(!currentMode.enabled, currentMode.direction);
   }
 
-  onModeChange(): void {
-    this.gliderMode = !this.gliderMode;
-    this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
+  onDirectionChange(direction: GliderDirection): void {
+    this.lifeControl.changeGliderMode(true, direction);
   }
-
-  onDirectionChange(event): void {
-    this.gliderDirection = +event.target.value;
-    this.lifeControlService.changeGliderMode(this.gliderMode, this.gliderDirection);
-  }
-
 }

@@ -1,83 +1,103 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { startOptions } from './game-model/startOptions';
-import { gliderDirection } from './game-model/gliderDirection';
+import { Injectable, signal, computed } from '@angular/core';
+import { StartOptions } from './game-model/start-options';
+import { GliderDirection } from './game-model/glider-direction';
+
+export interface GliderMode {
+  enabled: boolean;
+  direction: GliderDirection;
+}
+
+export interface SimulationState {
+  isRunning: boolean;
+  generations: number;
+  speed: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class LifeControlService {
+  // Default configuration
+  readonly defaultPixelSize = 4;
+  readonly defaultStartOptions = StartOptions.Random;
+  readonly defaultGliderDirection = GliderDirection.UpRight;
+  readonly defaultGliderMode = true;
+  readonly defaultSpeed = 15;
 
-  public DefaultStartOptions: startOptions = startOptions.Random;
-  public DefaultPixelSize: number = 4;
-  public DefaultGliderDirection: gliderDirection = gliderDirection.UpRight;
-  public DefaultGliderMode: boolean = true;
+  // Signals for reactive state
+  private readonly _pixelSize = signal(this.defaultPixelSize);
+  private readonly _startOptions = signal(this.defaultStartOptions);
+  private readonly _gliderMode = signal<GliderMode>({
+    enabled: this.defaultGliderMode,
+    direction: this.defaultGliderDirection
+  });
+  private readonly _simulationState = signal<SimulationState>({
+    isRunning: false,
+    generations: 0,
+    speed: this.defaultSpeed
+  });
+  private readonly _resetTrigger = signal(0);
 
-  private _cellPixelSize$: Subject<number>;
-  private _startOptions$: Subject<startOptions>;
-  private _lifeState$: Subject<boolean>;
-  private _generationsUp$: Subject<number>;
-  private _reset$: Subject<void>;
-  private _gliderMode$: Subject<[boolean, gliderDirection]>;
+  // Public readonly signals
+  readonly pixelSize = this._pixelSize.asReadonly();
+  readonly startOptions = this._startOptions.asReadonly();
+  readonly gliderMode = this._gliderMode.asReadonly();
+  readonly simulationState = this._simulationState.asReadonly();
+  readonly resetTrigger = this._resetTrigger.asReadonly();
 
-  constructor() {
-    this._cellPixelSize$ = new Subject<number>();
-    this._startOptions$ = new Subject<startOptions>();
-    this._lifeState$ = new Subject<boolean>();
-    this._generationsUp$ = new Subject<number>();
-    this._reset$ = new Subject<void>();
-    this._gliderMode$ = new BehaviorSubject<[boolean, gliderDirection]>([this.DefaultGliderMode, this.DefaultGliderDirection]);
-  }  
+  // Computed values
+  readonly isRunning = computed(() => this._simulationState().isRunning);
+  readonly generations = computed(() => this._simulationState().generations);
+  readonly speed = computed(() => this._simulationState().speed);
+  readonly gliderEnabled = computed(() => this._gliderMode().enabled);
+  readonly gliderDirection = computed(() => this._gliderMode().direction);
 
-  public get CellPixelSize$(): Observable<number> {
-    return this._cellPixelSize$;
+  changePixelSize(size: number): void {
+    this._pixelSize.set(size);
+    this.reset();
   }
 
-  public changePixelSize(pixelSize: number): void {
-    this._cellPixelSize$.next(pixelSize);
+  changeStartOptions(options: StartOptions): void {
+    this._startOptions.set(options);
+    this.reset();
   }
 
-  public get StartOptions$(): Observable<startOptions> {
-    return this._startOptions$;
-  }
-  
-  public get LifeState$(): Observable<boolean> {
-    return this._lifeState$;
+  changeGliderMode(enabled: boolean, direction: GliderDirection): void {
+    this._gliderMode.set({ enabled, direction });
   }
 
-  public get Reset$(): Observable<void> {
-    return this._reset$;
+  changeSpeed(speed: number): void {
+    this._simulationState.update(state => ({ ...state, speed }));
   }
 
-  public get GliderMode$(): Observable<[boolean, gliderDirection]> {
-    return this._gliderMode$;
+  start(): void {
+    this._simulationState.update(state => ({ ...state, isRunning: true }));
   }
 
-  public startGen(): void {
-    this._lifeState$.next(true);
+  stop(): void {
+    this._simulationState.update(state => ({ ...state, isRunning: false }));
   }
 
-  public stopGen(): void {
-    this._lifeState$.next(false);
+  toggle(): void {
+    this._simulationState.update(state => ({
+      ...state,
+      isRunning: !state.isRunning
+    }));
   }
 
-  public changeStartOptions(startOptions: startOptions): void {
-    this._startOptions$.next(startOptions);
-  }
-  
-  public get generationsUp$(): Observable<number> {
-    return this._generationsUp$;
-  }
-
-  public upCount(): void {
-    this._generationsUp$.next();
+  incrementGeneration(): void {
+    this._simulationState.update(state => ({
+      ...state,
+      generations: state.generations + 1
+    }));
   }
 
-  public reset(): void {
-    this._reset$.next();
-  }
-
-  public changeGliderMode(gliderMode: boolean, direction: gliderDirection): void {
-    this._gliderMode$.next([gliderMode, direction]);
+  reset(): void {
+    this._simulationState.set({
+      isRunning: false,
+      generations: 0,
+      speed: this._simulationState().speed
+    });
+    this._resetTrigger.update(v => v + 1);
   }
 }

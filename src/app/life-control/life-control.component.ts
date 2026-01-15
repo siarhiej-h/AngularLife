@@ -1,80 +1,50 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { LifeControlService } from '../life-control.service';
-import { startOptions } from '../game-model/startOptions';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Params } from '@angular/router';
+import { StartOptions } from '../game-model/start-options';
+import { GliderModeSwitchComponent } from '../glider-mode-switch/glider-mode-switch.component';
 
 @Component({
   selector: 'app-life-control',
+  standalone: true,
+  imports: [FormsModule, GliderModeSwitchComponent],
   templateUrl: './life-control.component.html',
-  styleUrls: ['./life-control.component.css']
+  styleUrl: './life-control.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LifeControlComponent implements OnInit, OnDestroy {
+export class LifeControlComponent {
+  private readonly lifeControl = inject(LifeControlService);
 
-  public lifeStarted: boolean;
+  readonly StartOptions = StartOptions;
+  readonly startOptionKeys = Object.values(StartOptions);
 
-  public generationsPassed: number;
+  readonly isRunning = this.lifeControl.isRunning;
+  readonly generations = this.lifeControl.generations;
 
-  public startOptions = startOptions;  
+  readonly selectedOption = computed(() => this.lifeControl.startOptions());
 
-  public get startOptionKeys():string[] {
-    return Object.keys(startOptions);
-  }
-
-  public selectedOption: startOptions;
-
-  private subs: Subscription[] = [];  
-
-  constructor(public lifeControlService: LifeControlService, private route: ActivatedRoute) { 
-
-    this.lifeStarted = false;
-    this.generationsPassed = 0;
-    
-    this.onReset = this.onReset.bind(this);
-    this.onParamsChange = this.onParamsChange.bind(this);
-
-    this.selectedOption = lifeControlService.DefaultStartOptions;
-    this.subs.push(this.lifeControlService.generationsUp$.subscribe(() => {
-      this.generationsPassed++;
-    }));
-
-    this.subs.push(this.lifeControlService.CellPixelSize$.subscribe(this.onReset));
-    this.subs.push(this.route.queryParams.subscribe(this.onParamsChange));
-  }
-
-  onParamsChange(params: Params) {
-    let { started } = params;    
-    if ((/true/i).test(started)) {
-      this.onStartStop();
+  readonly buttonLabel = computed(() => {
+    if (this.isRunning()) {
+      return 'Stop';
     }
-  }
+    return this.generations() === 0 ? 'Start' : 'Resume';
+  });
+
+  readonly showDropdown = computed(() => 
+    !this.isRunning() && this.generations() === 0
+  );
 
   onStartStop(): void {
-    if (this.lifeStarted) {
-      this.lifeStarted = false;
-      this.lifeControlService.stopGen();
-    }
-    else {
-      this.lifeStarted = true;
-      this.lifeControlService.startGen();
-    }        
+    this.lifeControl.toggle();
   }
 
   onReset(): void {
-    this.lifeStarted = false;
-    this.generationsPassed = 0;
-    this.lifeControlService.reset();
+    this.lifeControl.reset();
   }
 
-  ngOnInit() {
-  }
-
-  ngOnDestroy() {
-    this.subs.forEach(s => s.unsubscribe());
-  }
-
-  onStartModeChange(event) {
-    this.selectedOption = event.target.value;
-    this.lifeControlService.changeStartOptions(this.selectedOption);
+  onStartModeChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const option = target.value as StartOptions;
+    this.lifeControl.changeStartOptions(option);
   }
 }

@@ -1,143 +1,129 @@
-import { cell, cellData } from "./cell";
-import { startOptions } from "./startOptions";
+import { Cell, CellData } from './cell';
+import { StartOptions } from './start-options';
 
-class grid {
-    cells: cell[];
-    cellsNext: cell[];
+export class Grid {
+    cells: Cell[];
+    cellsNext: Cell[];
 
-    private constructor(public width: number, public height: number) {
-        this.cells = new Array<cell>(width * height);
-        this.cellsNext = new Array<cell>(width * height);
-        for (let i = 0; i !== height; i++)
-        {
-            const row = i * width;
-            for (let j = 0; j !== width; j++)
-            {
-                this.cells[row + j] = new cell(false);
-                this.cellsNext[row + j] = new cell(false);
-            }
+    private constructor(
+        public readonly width: number,
+        public readonly height: number
+    ) {
+        const size = width * height;
+        this.cells = new Array<Cell>(size);
+        this.cellsNext = new Array<Cell>(size);
+
+        for (let i = 0; i < size; i++) {
+            this.cells[i] = new Cell(false);
+            this.cellsNext[i] = new Cell(false);
         }
     }
 
-    public static create(width: number, height: number, options: startOptions, probability: number = 0.1): grid {
-        var newGrid = new grid(width, height);
+    static create(
+        width: number,
+        height: number,
+        options: StartOptions,
+        probability = 0.1
+    ): Grid {
+        const newGrid = new Grid(width, height);
         newGrid.populate(options, probability);
         return newGrid;
     }
 
-    public calcNextGen(): [cellData[], cellData[]] {
-        let alive = [];
-        let dead = [];
+    calcNextGen(): [CellData[], CellData[]] {
+        const alive: CellData[] = [];
+        const dead: CellData[] = [];
 
-        for (let i = 0; i !== this.cells.length; i++) {
+        // Copy neighbour counts
+        for (let i = 0; i < this.cells.length; i++) {
             this.cellsNext[i].neighboursAlive = this.cells[i].neighboursAlive;
         }
 
-        for (let i = 0; i !== this.height; i++) {
-            var row = i * this.width;
-            for (let j = 0; j !== this.width; j++)
-            {
-                var cell = this.cells[row + j];
-                var cellNextGen = this.cellsNext[row + j];
-                cellNextGen.isAlive = grid.prepareNextState(cell);
-                if (cellNextGen.isAlive !== cell.isAlive)
-                {
-                    this.updateCellNeighbours(this.cellsNext, i, j, cellNextGen.isAlive);
-                    (cellNextGen.isAlive ? alive : dead).push({x: j, y: i});
+        // Calculate next generation
+        for (let row = 0; row < this.height; row++) {
+            const rowOffset = row * this.width;
+            for (let col = 0; col < this.width; col++) {
+                const cell = this.cells[rowOffset + col];
+                const cellNextGen = this.cellsNext[rowOffset + col];
+                cellNextGen.isAlive = Grid.prepareNextState(cell);
+
+                if (cellNextGen.isAlive !== cell.isAlive) {
+                    this.updateCellNeighbours(this.cellsNext, row, col, cellNextGen.isAlive);
+                    (cellNextGen.isAlive ? alive : dead).push({ x: col, y: row });
                 }
             }
         }
 
+        // Swap buffers
         [this.cells, this.cellsNext] = [this.cellsNext, this.cells];
 
         return [alive, dead];
     }
 
-    public set(x: number, y: number, isAlive: boolean): void {
-        var cell = this.cells[y * this.width + x];
-        if (cell.isAlive !== isAlive)
-        {
-            cell.isAlive = isAlive;            
+    set(x: number, y: number, isAlive: boolean): void {
+        const cell = this.cells[y * this.width + x];
+        if (cell.isAlive !== isAlive) {
+            cell.isAlive = isAlive;
             this.updateCellNeighbours(this.cells, y, x, isAlive);
         }
     }
 
-    private static prepareNextState(cell: cell): boolean {
-        let nextState = cell.isAlive;
-        if (nextState && cell.neighboursAlive < 2)
-        {
-            nextState = false;
-        }
-        else if (nextState && cell.neighboursAlive > 3)
-        {
-            nextState = false;
-        }
-        else if (!nextState && cell.neighboursAlive === 3)
-        {
-            nextState = true;
-        }
+    private static prepareNextState(cell: Cell): boolean {
+        const { isAlive, neighboursAlive } = cell;
 
-        return nextState;
+        // Conway's Game of Life rules:
+        // 1. Any live cell with fewer than 2 neighbours dies (underpopulation)
+        // 2. Any live cell with 2 or 3 neighbours survives
+        // 3. Any live cell with more than 3 neighbours dies (overpopulation)
+        // 4. Any dead cell with exactly 3 neighbours becomes alive (reproduction)
+
+        if (isAlive) {
+            return neighboursAlive === 2 || neighboursAlive === 3;
+        }
+        return neighboursAlive === 3;
     }
-    
-    private populate(options: startOptions, probability: number = 0.5): void {
-        switch (options) {
-            case startOptions.Random:
-                this.populateRandomGrid(probability);
-                break;
 
-            case startOptions.Blank:
-            default:
-                break;
+    private populate(options: StartOptions, probability = 0.5): void {
+        if (options === StartOptions.Random) {
+            this.populateRandomGrid(probability);
         }
     }
 
     private populateRandomGrid(probability: number): void {
-        for (let i = 0; i !== this.height; i++) {
-            const row = i * this.width;
-            for (let j = 0; j !== this.width; j++) {                
-                var outcome = Math.random() < probability ? true : false;
-                this.cells[row + j].isAlive = outcome;
+        for (let row = 0; row < this.height; row++) {
+            const rowOffset = row * this.width;
+            for (let col = 0; col < this.width; col++) {
+                const isAlive = Math.random() < probability;
+                this.cells[rowOffset + col].isAlive = isAlive;
 
-                if (outcome) {
-                    this.updateCellNeighbours(this.cells, i, j, outcome);
+                if (isAlive) {
+                    this.updateCellNeighbours(this.cells, row, col, true);
                 }
             }
         }
     }
 
-    private updateCellNeighbours(cells: cell[], row: number, column: number, newValue: boolean): void {
-        var upRow = (row === 0 ? this.height - 1 : row - 1) * this.width;
-        var downRow = (row === this.height - 1 ? 0 : row + 1) * this.width;
-        let left = column === 0 ? this.width - 1 : column - 1;
-        let right = column === this.width - 1 ? 0 : column + 1;
-        let rowWidth = row * this.width;
+    private updateCellNeighbours(
+        cells: Cell[],
+        row: number,
+        col: number,
+        isAlive: boolean
+    ): void {
+        const upRow = (row === 0 ? this.height - 1 : row - 1) * this.width;
+        const downRow = (row === this.height - 1 ? 0 : row + 1) * this.width;
+        const left = col === 0 ? this.width - 1 : col - 1;
+        const right = col === this.width - 1 ? 0 : col + 1;
+        const currentRow = row * this.width;
+        const delta = isAlive ? 1 : -1;
 
-        if (newValue) {
-            cells[upRow + left].neighboursAlive++;
-            cells[upRow + column].neighboursAlive++;
-            cells[upRow + right].neighboursAlive++;
-
-            cells[rowWidth + left].neighboursAlive++;
-            cells[rowWidth + right].neighboursAlive++;
-
-            cells[downRow + left].neighboursAlive++;
-            cells[downRow + column].neighboursAlive++;
-            cells[downRow + right].neighboursAlive++;
-        }
-        else {
-            cells[upRow + left].neighboursAlive--;
-            cells[upRow + column].neighboursAlive--;
-            cells[upRow + right].neighboursAlive--;
-    
-            cells[rowWidth + left].neighboursAlive--;
-            cells[rowWidth + right].neighboursAlive--;
-    
-            cells[downRow + left].neighboursAlive--;
-            cells[downRow + column].neighboursAlive--;
-            cells[downRow + right].neighboursAlive--;
-        }        
+        // Update all 8 neighbours
+        cells[upRow + left].neighboursAlive += delta;
+        cells[upRow + col].neighboursAlive += delta;
+        cells[upRow + right].neighboursAlive += delta;
+        cells[currentRow + left].neighboursAlive += delta;
+        cells[currentRow + right].neighboursAlive += delta;
+        cells[downRow + left].neighboursAlive += delta;
+        cells[downRow + col].neighboursAlive += delta;
+        cells[downRow + right].neighboursAlive += delta;
     }
 }
-
-export { grid };

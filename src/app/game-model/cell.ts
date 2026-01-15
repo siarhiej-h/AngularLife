@@ -1,15 +1,13 @@
-class cell {
-    isAlive: boolean;
-    neighboursAlive: number = 0;
-
-    constructor (isAlive: boolean) {
-        this.isAlive = isAlive;
-    }
+export interface CellData {
+  x: number;
+  y: number;
 }
 
-class cellData {
-    x: number;
-    y: number;
-}
+export class Cell {
+  isAlive: boolean;
+  neighboursAlive = 0;
 
-export { cell, cellData };
+  constructor(isAlive: boolean) {
+    this.isAlive = isAlive;
+  }
+}

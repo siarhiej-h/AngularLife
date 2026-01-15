@@ -1,43 +1,29 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { LifeControlService } from '../life-control.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-pixel-size-control',
+  standalone: true,
   templateUrl: './pixel-size-control.component.html',
-  styleUrls: ['./pixel-size-control.component.css']
+  styleUrl: './pixel-size-control.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PixelSizeControlComponent implements OnInit, OnDestroy {  
+export class PixelSizeControlComponent {
+  private readonly lifeControl = inject(LifeControlService);
 
-  Enabled: boolean = true;
+  readonly pixelSize = signal(this.lifeControl.defaultPixelSize);
+  readonly minSize = 2;
+  readonly maxSize = 50;
 
-  PixelSize: number = 4;
+  // Disable during simulation
+  readonly disabled = this.lifeControl.isRunning;
 
-  private subs: Subscription[] = [];  
-  
-  constructor(private lifeControlService: LifeControlService) { 
-    this.subs.push(lifeControlService.LifeState$.subscribe(state => {
-      if (state) {
-        this.Enabled = false;
-      }
-    }));
+  readonly sizeLabel = computed(() => `${this.pixelSize()}px`);
 
-    this.subs.push(lifeControlService.Reset$.subscribe(() => {
-      this.Enabled = true;
-    }));
-  }
-
-  ngOnInit() {
-  }
-
-  onSliderValueChange(event) {
-    if (event.target) {
-      this.PixelSize = event.target.value;
-      this.lifeControlService.changePixelSize(this.PixelSize);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.subs.forEach(s => s.unsubscribe());
+  onSizeChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const size = parseInt(target.value, 10);
+    this.pixelSize.set(size);
+    this.lifeControl.changePixelSize(size);
   }
 }

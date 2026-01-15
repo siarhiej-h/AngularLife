@@ -1,51 +1,40 @@
-<div class="gliderMode">
-    <input type="checkbox" id="gliderModeCheckbox" [value]="gliderMode" (change)="onModeChange()" [checked]="!gliderMode">
-    <label class="gliderModeLabel" for="gliderModeCheckbox">
-        <span class="gliderModeInner"></span>
-    </label>
-</div>
+<div class="glider-control">
+  <button
+    type="button"
+    class="mode-toggle"
+    [class.active]="gliderEnabled()"
+    (click)="onModeToggle()"
+    [title]="gliderEnabled() ? 'Switch to single cell mode' : 'Switch to glider mode'"
+  >
+    <svg class="toggle-icon" viewBox="0 0 24 24" fill="currentColor">
+      @if (gliderEnabled()) {
+        <!-- Glider icon -->
+        <circle cx="6" cy="6" r="2.5"/>
+        <circle cx="12" cy="6" r="2.5"/>
+        <circle cx="18" cy="6" r="2.5"/>
+        <circle cx="18" cy="12" r="2.5"/>
+        <circle cx="12" cy="18" r="2.5"/>
+      } @else {
+        <!-- Single cell icon -->
+        <circle cx="12" cy="12" r="4"/>
+      }
+    </svg>
+    <span class="toggle-label">{{ gliderEnabled() ? 'Glider' : 'Cell' }}</span>
+  </button>
 
-<div>
-    <div *ngIf="gliderMode" class="gliderDirection">
-        <label class="gliderDirectionLabel">
-            <input type="radio"
-                    class="gliderDirectionRadio"
-                    name="gliderDirection"
-                    [value]="upLeft"
-                    (change)="onDirectionChange($event)"
-                    [checked]="upLeft === gliderDirection"
-                    >
-            <span class="gliderDirectionBox"></span>
-        </label>
-        <label class="gliderDirectionLabel">
-            <input type="radio"
-                    class="gliderDirectionRadio"
-                    name="gliderDirection"
-                    [value]="upRight"
-                    (change)="onDirectionChange($event)"
-                    [checked]="upRight === gliderDirection"
-                   >
-            <span class="gliderDirectionBox"></span>
-        </label>
-        <label class="gliderDirectionLabel">
-            <input type="radio"
-                    class="gliderDirectionRadio"
-                    name="gliderDirection"
-                    [value]="downLeft"
-                    (change)="onDirectionChange($event)"
-                    [checked]="downLeft === gliderDirection"
-                   >
-            <span class="gliderDirectionBox"></span>
-        </label>
-        <label class="gliderDirectionLabel">
-            <input type="radio"
-                    class="gliderDirectionRadio"
-                    name="gliderDirection"
-                    [value]="downRight"
-                    (change)="onDirectionChange($event)"
-                    [checked]="downRight === gliderDirection"
-                   >
-            <span class="gliderDirectionBox"></span>
-        </label>
+  @if (gliderEnabled()) {
+    <div class="direction-picker">
+      @for (dir of directions; track dir.value) {
+        <button
+          type="button"
+          class="direction-btn"
+          [class.active]="gliderDirection() === dir.value"
+          [title]="dir.title"
+          (click)="onDirectionChange(dir.value)"
+        >
+          {{ dir.label }}
+        </button>
+      }
     </div>
+  }
 </div>

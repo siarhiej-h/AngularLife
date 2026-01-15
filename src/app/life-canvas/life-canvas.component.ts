@@ -1,208 +1,266 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef  } from '@angular/core';
-import { ActivatedRoute, Params  } from '@angular/router';
-import { grid } from "../game-model/grid";
-import { cellData } from "../game-model/cell";
-import { startOptions } from '../game-model/startOptions';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy,
+  inject,
+  effect,
+  signal,
+  HostListener
+} from '@angular/core';
+import { Grid } from '../game-model/grid';
+import { CellData } from '../game-model/cell';
 import { LifeControlService } from '../life-control.service';
-import { Subscription } from 'rxjs';
-import { gliderDirection } from '../game-model/gliderDirection';
-import { getGlider } from '../game-model/lifeFormHelper';
+import { GliderDirection } from '../game-model/glider-direction';
+import { getGlider } from '../game-model/life-form-helper';
 
 @Component({
   selector: 'app-life-canvas',
+  standalone: true,
   templateUrl: './life-canvas.component.html',
-  styleUrls: ['./life-canvas.component.css']
+  styleUrl: './life-canvas.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {  
+export class LifeCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
 
-  private cols: number;
-  private rows: number;
-  private cellPixelSize: number = 4;
-  private cellBorderSize: number = 1;
-  private context: CanvasRenderingContext2D;
-  private subs: Subscription[] = [];
-  private grid: grid;
-  private interval;
-  private startOptions: startOptions;
-  private containerWidth: number;
-  private containerHeight: number;
-  private isGliderMode: boolean;
-  private gliderDirection: gliderDirection;
-  private delay: number = 15;
+  private readonly lifeControl = inject(LifeControlService);
 
-  @ViewChild('canvas', {static: false}) canvas: ElementRef;
+  private context!: CanvasRenderingContext2D;
+  private grid!: Grid;
+  private animationFrameId: number | null = null;
+  private lastFrameTime = 0;
+  private containerWidth = 0;
+  private containerHeight = 0;
 
-  constructor(private lifeControlService: LifeControlService, private ref: ChangeDetectorRef, private route: ActivatedRoute) {
-    
-    this.cellPixelSize = lifeControlService.DefaultPixelSize;
-    this.startOptions = lifeControlService.DefaultStartOptions;
+  // Reactive state
+  readonly cols = signal(0);
+  readonly rows = signal(0);
+  readonly cellPixelSize = signal(this.lifeControl.defaultPixelSize);
+  private readonly cellBorderSize = 1;
 
-    this.onPixelSizeChange = this.onPixelSizeChange.bind(this);
-    this.onStartOptionsChange = this.onStartOptionsChange.bind(this);
-    this.onLifeStateChanged = this.onLifeStateChanged.bind(this);
-    this.onReset = this.onReset.bind(this);
-    this.onCanvasClick = this.onCanvasClick.bind(this);
-    this.onGliderModeChange = this.onGliderModeChange.bind(this);
-    this.onParamsChange = this.onParamsChange.bind(this);
+  // Canvas dimensions
+  readonly canvasWidth = signal(0);
+  readonly canvasHeight = signal(0);
 
-    this.subs.push(this.lifeControlService.StartOptions$.subscribe(this.onStartOptionsChange));
-    this.subs.push(this.lifeControlService.CellPixelSize$.subscribe(this.onPixelSizeChange));
-    this.subs.push(this.lifeControlService.LifeState$.subscribe(this.onLifeStateChanged));
-    this.subs.push(this.lifeControlService.Reset$.subscribe(this.onReset));
-    this.subs.push(this.lifeControlService.GliderMode$.subscribe(this.onGliderModeChange));
-    this.subs.push(route.queryParams.subscribe(this.onParamsChange));
+  constructor() {
+    // React to pixel size changes
+    effect(() => {
+      const size = this.lifeControl.pixelSize();
+      this.cellPixelSize.set(size);
+      this.updateDimensions();
+      this.initializeGrid();
+    });
+
+    // React to start options changes
+    effect(() => {
+      this.lifeControl.startOptions();
+      if (this.context) {
+        this.initializeGrid();
+      }
+    });
+
+    // React to reset trigger
+    effect(() => {
+      this.lifeControl.resetTrigger();
+      if (this.context) {
+        this.stopSimulation();
+        this.initializeGrid();
+      }
+    });
+
+    // React to simulation state changes
+    effect(() => {
+      const state = this.lifeControl.simulationState();
+      if (state.isRunning) {
+        this.startSimulation();
+      } else {
+        this.stopSimulation();
+      }
+    });
   }
 
-  onParamsChange(params: Params) {
-    let { delay } = params;
-    if (delay < 1){
-      return;
-    }
-
-    this.delay = delay;
-    if (this.interval){
-      clearInterval(this.interval);
-      this.onLifeStateChanged(true);
-    }
+  ngOnInit(): void {
+    this.calculateContainerSize();
+    this.updateDimensions();
   }
 
-  onLifeStateChanged(state: boolean): void {
-    if (state) {      
-        this.interval = setInterval(() => {
-          let [alive, dead] = this.grid.calcNextGen();
-          this.paint(alive, dead);
-          this.lifeControlService.upCount();
-      }, this.delay);
+  ngAfterViewInit(): void {
+    const ctx = this.canvas.nativeElement.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
     }
-    else {
-      clearInterval(this.interval);
-    }
+    this.context = ctx;
+    this.initializeGrid();
   }
 
-  onPixelSizeChange(pixelSize: number): void {
-    this.clear();
-    this.updatePixelSize(pixelSize);
-    this.onReset();
+  ngOnDestroy(): void {
+    this.stopSimulation();
   }
 
-  onStartOptionsChange(startOptions: startOptions): void {
-    this.clear();
-    this.startOptions = startOptions;
-    this.onReset();
+  @HostListener('window:resize')
+  onResize(): void {
+    this.calculateContainerSize();
+    this.updateDimensions();
+    this.initializeGrid();
   }
 
-  onReset(): void {
-    this.grid = grid.create(this.cols, this.rows, this.startOptions);
-    this.renderGrid(this.grid);
-  }
+  onCanvasClick(event: MouseEvent): void {
+    if (!this.grid) return;
 
-  onCanvasClick(event) {
-    if (!event) {
-      return;
-    }
+    const rect = this.canvas.nativeElement.getBoundingClientRect();
+    const x = Math.floor((event.clientX - rect.left) / this.cellPixelSize());
+    const y = Math.floor((event.clientY - rect.top) / this.cellPixelSize());
 
-    let x = Math.floor(event.offsetX / this.cellPixelSize);
-    let y = Math.floor(event.offsetY / this.cellPixelSize);
+    const alive: CellData[] = [];
+    const dead: CellData[] = [];
+    const gliderMode = this.lifeControl.gliderMode();
 
-    let alive = [];
-    let dead = [];
-    if (this.isGliderMode) {
-      // Enums in typescript ONE LOVE. Remove the + and switching direciton will stop working.
-      let cells = getGlider(+this.gliderDirection, this.grid, x, y);
-      cells.forEach(c => {
-        let isAlive: boolean = c[2];
-        let x: number = c[0];
-        let y: number = c[1];
-        this.grid.set(x, y, isAlive);
-        (isAlive ? alive : dead).push({x: x, y: y});
-      });
-    }
-    else {
-      let isAlive = !this.grid.cells[y * this.grid.width + x].isAlive;
-      this.grid.set(x, y, isAlive);
-      (isAlive ? alive : dead).push({x: x, y: y});
+    if (gliderMode.enabled) {
+      this.placeGlider(x, y, gliderMode.direction, alive, dead);
+    } else {
+      this.toggleCell(x, y, alive, dead);
     }
 
     this.paint(alive, dead);
   }
 
-  onGliderModeChange(gliderMode: [boolean, gliderDirection]) {
-    this.isGliderMode = gliderMode[0];
-    this.gliderDirection = gliderMode[1];
-  }
-
-  ngOnInit() {
-    this.containerWidth = window.outerWidth * .97;
-    this.containerHeight = window.outerHeight * .85;
-    this.cols = 2 * Math.floor(this.containerWidth / this.cellPixelSize / 2);
-    this.rows = 2 * Math.floor(this.containerHeight / this.cellPixelSize / 2);
-  }
-
-  ngOnDestroy() {
-    this.subs.forEach(s => s.unsubscribe());
-    if (this.interval) {
-      clearInterval(this.interval);
+  private placeGlider(
+    x: number,
+    y: number,
+    direction: GliderDirection,
+    alive: CellData[],
+    dead: CellData[]
+  ): void {
+    const cells = getGlider(direction, this.grid, x, y);
+    for (const [cellX, cellY, isAlive] of cells) {
+      this.grid.set(cellX, cellY, isAlive);
+      (isAlive ? alive : dead).push({ x: cellX, y: cellY });
     }
   }
 
-  ngAfterViewInit() {
-    const canvas = this.canvas.nativeElement;
-    this.context = canvas.getContext('2d');
-    this.grid = grid.create(this.cols, this.rows, this.startOptions);
-    this.renderGrid(this.grid);     
+  private toggleCell(
+    x: number,
+    y: number,
+    alive: CellData[],
+    dead: CellData[]
+  ): void {
+    const idx = y * this.grid.width + x;
+    if (idx >= 0 && idx < this.grid.cells.length) {
+      const isAlive = !this.grid.cells[idx].isAlive;
+      this.grid.set(x, y, isAlive);
+      (isAlive ? alive : dead).push({ x, y });
+    }
   }
 
-  updatePixelSize(pixelSize: number): void {
-    this.cellPixelSize = pixelSize;
-    this.cols = 2 * Math.floor(this.containerWidth / this.cellPixelSize / 2);
-    this.rows = 2 * Math.floor(this.containerHeight / this.cellPixelSize / 2);
-    this.ref.detectChanges();
+  private calculateContainerSize(): void {
+    this.containerWidth = Math.floor(window.innerWidth * 0.95);
+    this.containerHeight = Math.floor(window.innerHeight * 0.65);
   }
 
-  renderGrid(grid: grid) {
-    let alive: cellData[] = [];
-    let dead: cellData[] = [];
-    for (let i = 0; i !== grid.height; i++) {
-      const row = i * grid.width;
-      for (let j = 0; j !== grid.width; j++) {
-        let cell = {x: j, y: i};
-        (grid.cells[row + j].isAlive ? alive : dead).push(cell);
+  private updateDimensions(): void {
+    const pixelSize = this.cellPixelSize();
+    // Ensure even numbers for smoother rendering
+    const cols = 2 * Math.floor(this.containerWidth / pixelSize / 2);
+    const rows = 2 * Math.floor(this.containerHeight / pixelSize / 2);
+
+    this.cols.set(cols);
+    this.rows.set(rows);
+    this.canvasWidth.set(cols * pixelSize);
+    this.canvasHeight.set(rows * pixelSize);
+  }
+
+  private initializeGrid(): void {
+    if (!this.context) return;
+
+    this.clear();
+    this.grid = Grid.create(
+      this.cols(),
+      this.rows(),
+      this.lifeControl.startOptions()
+    );
+    this.renderGrid();
+  }
+
+  private renderGrid(): void {
+    const alive: CellData[] = [];
+    const dead: CellData[] = [];
+
+    for (let row = 0; row < this.grid.height; row++) {
+      const rowOffset = row * this.grid.width;
+      for (let col = 0; col < this.grid.width; col++) {
+        const cell = { x: col, y: row };
+        (this.grid.cells[rowOffset + col].isAlive ? alive : dead).push(cell);
       }
     }
 
     this.paint(alive, dead);
   }
 
-  paint(alive: cellData[], dead: cellData[]): void {
-    if (dead) {
-      this.context.fillStyle = 'white';
-      this.paintCells(dead);
+  private startSimulation(): void {
+    if (this.animationFrameId !== null) return;
+
+    const frameDelay = this.lifeControl.speed();
+
+    const animate = (timestamp: number): void => {
+      if (timestamp - this.lastFrameTime >= frameDelay) {
+        const [alive, dead] = this.grid.calcNextGen();
+        this.paint(alive, dead);
+        this.lifeControl.incrementGeneration();
+        this.lastFrameTime = timestamp;
+      }
+      this.animationFrameId = requestAnimationFrame(animate);
+    };
+
+    this.animationFrameId = requestAnimationFrame(animate);
+  }
+
+  private stopSimulation(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+  }
+
+  private paint(alive: CellData[], dead: CellData[]): void {
+    const pixelSize = this.cellPixelSize();
+    const size = pixelSize - this.cellBorderSize;
+    const border = this.cellBorderSize;
+
+    // Paint dead cells (background color)
+    if (dead.length > 0) {
+      this.context.fillStyle = '#1a1a2e';
+      for (const cell of dead) {
+        this.context.fillRect(
+          cell.x * pixelSize + border,
+          cell.y * pixelSize + border,
+          size,
+          size
+        );
+      }
     }
 
-    if (alive) {
-      this.context.fillStyle = '#252525';
-      this.paintCells(alive);
+    // Paint alive cells (accent color)
+    if (alive.length > 0) {
+      this.context.fillStyle = '#e94560';
+      for (const cell of alive) {
+        this.context.fillRect(
+          cell.x * pixelSize + border,
+          cell.y * pixelSize + border,
+          size,
+          size
+        );
+      }
     }
   }
 
-  paintCells(cells: cellData[]): void {
-    let size = this.cellPixelSize - this.cellBorderSize;
-    for (const cell of cells) {
-      let x = cell.x * this.cellPixelSize + this.cellBorderSize;
-      let y = cell.y * this.cellPixelSize + this.cellBorderSize;
-      this.context.fillRect(x, y, size, size);
+  private clear(): void {
+    if (this.context) {
+      this.context.fillStyle = '#1a1a2e';
+      this.context.fillRect(0, 0, this.canvasWidth(), this.canvasHeight());
     }
-  }
-
-  clear() {    
-    this.context.clearRect(0, 0, this.cols * this.cellPixelSize, this.rows * this.cellPixelSize);
-  }
-
-  get Width(): number {
-    return this.cols * this.cellPixelSize;
-  }
-
-  get Height(): number {
-    return this.rows * this.cellPixelSize;
   }
 }

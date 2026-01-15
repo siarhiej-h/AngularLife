@@ -1,1 +1,9 @@
-<canvas #canvas id="lifeCanvas" width="{{Width}}" height="{{Height}}" (click)="onCanvasClick($event)">
+<canvas
+  #canvas
+  class="life-canvas"
+  [width]="canvasWidth()"
+  [height]="canvasHeight()"
+  (click)="onCanvasClick($event)"
+  role="img"
+  aria-label="Game of Life simulation canvas. Click to add or remove cells."
+></canvas>
